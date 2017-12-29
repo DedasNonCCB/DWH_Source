@@ -1598,10 +1598,7 @@ BEGIN
     plib.o_log := 
       log_type.initialize('YES',gv_job_module,gv_job_owner,gv_pck ,gv_proc);
        
-
     plib.drop_table(gv_stg_owner, v_table_name);
-     
-  
     
     gv_dyn_task := '
     CREATE TABLE '||gv_stg_owner||'.'||v_table_name||' 
@@ -1771,6 +1768,8 @@ BEGIN
     v_table_name       varchar2(35) := 'ENDEX_TAG004';
     ----------------------------------------------------------------------------
     v_src_table_01     varchar2(60) := 'TMP_RAWDATA0010_C';
+    v_src_table_02     varchar2(60) := 'D_DEFINITIONS';
+    v_src_table_03     varchar2(60) := 'D_GROUPS';
     V_ABONE_TYPE       CHAR(1)      := NULL;
     V_ENDEX_DIFFERENCE VARCHAR2(10) := NULL;
     V_SCORE            VARCHAR2(10) := NULL;  
@@ -1783,18 +1782,25 @@ BEGIN
       log_type.initialize('YES',gv_job_module,gv_job_owner,gv_pck ,gv_proc);
 
     plib.drop_table(gv_stg_owner, v_table_name);
-      
+
+    gv_dyn_task := '      
     SELECT 
-      max(case when CODE= 'ABONE_TYPE' then PARAMETER_1 end) ABONE_TYPE,
-      max(case when CODE= 'ENDEX_DIFFERENCE' then PARAMETER_1 end) ENDEX_DIFFERENCE,
-      max(case when CODE= 'SCORE' then PARAMETER_1 end) SCORE INTO  V_ABONE_TYPE,V_ENDEX_DIFFERENCE,V_SCORE
+      max(case when CODE= ''ABONE_TYPE'' then PARAMETER_1 end) ABONE_TYPE,
+      max(case when CODE= ''ENDEX_DIFFERENCE'' then PARAMETER_1 end) ENDEX_DIFFERENCE,
+      max(case when CODE= ''SCORE'' then PARAMETER_1 end) SCORE 
+    INTO  
+      V_ABONE_TYPE,
+      V_ENDEX_DIFFERENCE,
+      V_SCORE
     FROM 
-      DWH_EDW.D_DEFINITIONS D 
-      JOIN DWH_EDW.D_GROUPS G ON (D.RID = G.MASTER_ID) 
+      FROM   '||gv_edw_owner||'.'||v_src_table_02||' D 
+      JOIN   '||gv_edw_owner||'.'||v_src_table_03||' G ON (D.RID = G.MASTER_ID) 
     WHERE
-       D.D_CODE ='subscribe_Analyze'
-      AND D.D_DESCRIPTION ='ENDEKS_DUSMESI_Primer';
+       D.D_CODE =''subscribe_Analyze''
+      AND D.D_DESCRIPTION =''ENDEKS_DUSMESI_Primer''
+    ';
     
+    execute immediate gv_dyn_task;
 
     gv_dyn_task := '
     CREATE TABLE '||gv_stg_owner||'.'||v_table_name||' 
