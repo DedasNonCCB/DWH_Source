@@ -601,19 +601,27 @@ PROCEDURE PRC_TMP_RAWDATA0010
 
     plib.drop_table(gv_stg_owner, v_table_name);
     
+    GV_DYN_TASK := '
     SELECT 
-      MAX(CASE WHEN CODE= 'ABONE_TYPE' THEN PARAMETER_1 END) ABONE_TYPE,
-      MAX(CASE WHEN CODE= 'VOLTAGE_MIN' THEN PARAMETER_1 END) VOLTAGE_MIN,
-      MAX(CASE WHEN CODE= 'VOLTAGE_MAX' THEN PARAMETER_1 END) VOLTAGE_MAX,
-      MAX(CASE WHEN CODE= 'ANALYZE_MONTH_RANGE' THEN PARAMETER_1 END) ANALYZE_MONTH_RANGE,
-      MAX(CASE WHEN CODE= 'STEP_CLOCK' THEN PARAMETER_1 END)-1 STEP_CLOCK,
-      MAX(CASE WHEN CODE= 'SCORE' THEN PARAMETER_1 END) SCORE INTO V_PABONE_TYPE,V_PVOLTAGE_MIN,V_PVOLTAGE_MAX,V_PANALYZE_MONTH_RANGE,V_PSTEP_CLOCK,V_PSCORE
-    FROM 
-      DWH_EDW.D_DEFINITIONS D 
-      JOIN DWH_EDW.D_GROUPS G ON (D.RID = G.MASTER_ID) 
+      MAX(CASE WHEN CODE= ''ABONE_TYPE'' THEN PARAMETER_1 END) ABONE_TYPE,
+      MAX(CASE WHEN CODE= ''VOLTAGE_MIN'' THEN PARAMETER_1 END) VOLTAGE_MIN,
+      MAX(CASE WHEN CODE= ''VOLTAGE_MAX'' THEN PARAMETER_1 END) VOLTAGE_MAX,
+      MAX(CASE WHEN CODE= ''ANALYZE_MONTH_RANGE'' THEN PARAMETER_1 END) ANALYZE_MONTH_RANGE,
+      MAX(CASE WHEN CODE= ''STEP_CLOCK'' THEN PARAMETER_1 END)-1 STEP_CLOCK,
+      MAX(CASE WHEN CODE= ''SCORE'' THEN PARAMETER_1 END) SCORE 
+    INTO 
+      V_PABONE_TYPE,
+      V_PVOLTAGE_MIN,
+      V_PVOLTAGE_MAX,
+      V_PANALYZE_MONTH_RANGE,
+      V_PSTEP_CLOCK,V_PSCORE
+    FROM   '||gv_edw_owner||'.'||v_src_table_02||' D 
+      JOIN '||gv_edw_owner||'.'||v_src_table_03||' G ON (D.RID = G.MASTER_ID) 
     WHERE 
-      D.D_CODE ='subscribe_Analyze'
-      AND D.D_DESCRIPTION ='GERILIM_DENGESIZLIGI_Primer';
+      D.D_CODE =''subscribe_Analyze''
+      AND D.D_DESCRIPTION =''GERILIM_DENGESIZLIGI_Primer''
+    '
+    execute immediate gv_dyn_task;  
           
     GV_DYN_TASK := '
     CREATE TABLE '||GV_STG_OWNER||'.'||V_TABLE_NAME||' 
@@ -646,7 +654,6 @@ PROCEDURE PRC_TMP_RAWDATA0010
              (V3 <=  '||V_PVOLTAGE_MIN||' AND V3NEXT<= '||V_PVOLTAGE_MIN||' AND V3NEXTNEXT <= '||V_PVOLTAGE_MIN||')
              ) THEN ''D'' END FAULT_TYPE,
       '||V_PSCORE||' AS SCORE,
-      --RN,
       MBS_MULTIPLIER,
       SAYAC_NO, 
       ROW_DATE
@@ -707,21 +714,31 @@ PROCEDURE PRC_TMP_RAWDATA0010
        
 
     plib.drop_table(gv_stg_owner, v_table_name);
-         
+
+    GV_DYN_TASK := '         
     SELECT 
-      MAX(CASE WHEN CODE= 'ABONE_TYPE' THEN PARAMETER_1 END) ABONE_TYPE,
-      MAX(CASE WHEN CODE= 'VOLTAGE_MIN' THEN PARAMETER_1 END) VOLTAGE_MIN,
-      MAX(CASE WHEN CODE= 'VOLTAGE_MAX' THEN PARAMETER_1 END) VOLTAGE_MAX,
-      MAX(CASE WHEN CODE= 'ANALYZE_MONTH_RANGE' THEN PARAMETER_1 END) ANALYZE_MONTH_RANGE,
-      MAX(CASE WHEN CODE= 'STEP_CLOCK' THEN PARAMETER_1 END)-1 STEP_CLOCK,
-      MAX(CASE WHEN CODE= 'SCORE' THEN PARAMETER_1 END) SCORE INTO V_SABONE_TYPE,V_SVOLTAGE_MIN,V_SVOLTAGE_MAX,V_SANALYZE_MONTH_RANGE,V_SSTEP_CLOCK,V_SSCORE           
-    FROM
-      DWH_EDW.D_DEFINITIONS D 
-      JOIN DWH_EDW.D_GROUPS G ON (D.RID = G.MASTER_ID) 
+      MAX(CASE WHEN CODE= ''ABONE_TYPE'' THEN PARAMETER_1 END) ABONE_TYPE,
+      MAX(CASE WHEN CODE= ''VOLTAGE_MIN'' THEN PARAMETER_1 END) VOLTAGE_MIN,
+      MAX(CASE WHEN CODE= ''VOLTAGE_MAX'' THEN PARAMETER_1 END) VOLTAGE_MAX,
+      MAX(CASE WHEN CODE= ''ANALYZE_MONTH_RANGE'' THEN PARAMETER_1 END) ANALYZE_MONTH_RANGE,
+      MAX(CASE WHEN CODE= ''STEP_CLOCK'' THEN PARAMETER_1 END)-1 STEP_CLOCK,
+      MAX(CASE WHEN CODE= ''SCORE'' THEN PARAMETER_1 END) SCORE 
+    INTO 
+      V_SABONE_TYPE,
+      V_SVOLTAGE_MIN,
+      V_SVOLTAGE_MAX,
+      V_SANALYZE_MONTH_RANGE,
+      V_SSTEP_CLOCK,
+      V_SSCORE           
+    FROM   '||gv_edw_owner||'.'||v_src_table_02||' D 
+      JOIN '||gv_edw_owner||'.'||v_src_table_03||' G ON (D.RID = G.MASTER_ID) 
     WHERE 
-      D.D_CODE ='subscribe_Analyze'
-      AND D.D_DESCRIPTION ='GERILIM_DENGESIZLIGI_Sekonder';
-    
+      D.D_CODE =''subscribe_Analyze''
+      AND D.D_DESCRIPTION =''GERILIM_DENGESIZLIGI_Sekonder''
+    ';
+
+    execute immediate gv_dyn_task;
+
     GV_DYN_TASK := '
     CREATE TABLE '||GV_STG_OWNER||'.'||V_TABLE_NAME||' 
     PARALLEL NOLOGGING COMPRESS
@@ -1242,6 +1259,8 @@ PROCEDURE PRC_TMP_RAWDATA0010
     v_table_name            varchar2(35) := 'COS_P_TAG003';
     ----------------------------------------------------------------------------
     v_src_table_01          varchar2(60) := 'TMP_RAWDATA0010_C';
+    v_src_table_02          varchar2(60) := 'D_DEFINITIONS';
+    v_src_table_03          varchar2(60) := 'D_GROUPS';
     V_PABONE_TYPE           CHAR(1)      :=      NULL;
     V_PFLOW_MIN             VARCHAR2(10) :=      NULL;
     V_PCOS_MIN              VARCHAR2(10) :=      NULL;
@@ -1259,23 +1278,33 @@ BEGIN
        
 
     plib.drop_table(gv_stg_owner, v_table_name);
-     
+
+    gv_dyn_task := '
     SELECT 
-      max(case when CODE= 'ABONE_TYPE' then PARAMETER_1 end) ABONE_TYPE,
-      max(case when CODE= 'FLOW_MIN' then PARAMETER_1 end) FLOW_MIN,
-      max(case when CODE= 'COS_MIN' then PARAMETER_1 end) COS_MIN,
-      max(case when CODE= 'COS_MAX' then PARAMETER_1 end) COS_MAX,            
-      max(case when CODE= 'ANALYZE_MONTH_RANGE' then PARAMETER_1 end) ANALYZE_MONTH_RANGE,
-      max(case when CODE= 'STEP_CLOCK' then PARAMETER_1 end)-1 STEP_CLOCK,
-      max(case when CODE= 'SCORE' then PARAMETER_1 end) SCORE INTO  V_PABONE_TYPE,V_PFLOW_MIN,V_PCOS_MIN,V_PCOS_MAX,V_PANALYZE_MONTH_RANGE,V_PSTEP_CLOCK,V_PSCORE
-    FROM  
-      DWH_EDW.D_DEFINITIONS D 
-      JOIN DWH_EDW.D_GROUPS G ON (D.RID = G.MASTER_ID) 
+      max(case when CODE= ''ABONE_TYPE'' then PARAMETER_1 end) ABONE_TYPE,
+      max(case when CODE= ''FLOW_MIN'' then PARAMETER_1 end) FLOW_MIN,
+      max(case when CODE= ''COS_MIN'' then PARAMETER_1 end) COS_MIN,
+      max(case when CODE= ''COS_MAX'' then PARAMETER_1 end) COS_MAX,            
+      max(case when CODE= ''ANALYZE_MONTH_RANGE'' then PARAMETER_1 end) ANALYZE_MONTH_RANGE,
+      max(case when CODE= ''STEP_CLOCK'' then PARAMETER_1 end)-1 STEP_CLOCK,
+      max(case when CODE= ''SCORE'' then PARAMETER_1 end) SCORE 
+    INTO  
+      V_PABONE_TYPE,
+      V_PFLOW_MIN,
+      V_PCOS_MIN,
+      V_PCOS_MAX,
+      V_PANALYZE_MONTH_RANGE,
+      V_PSTEP_CLOCK,
+      V_PSCORE
+    FROM   '||gv_edw_owner||'.'||v_src_table_02||' D 
+      JOIN '||gv_edw_owner||'.'||v_src_table_03||' G ON (D.RID = G.MASTER_ID) 
     WHERE 
-      D.D_CODE ='subscribe_Analyze'
-      AND D.D_DESCRIPTION ='COS_DEGERI_DUSUK_OLAN_Primer';
-            
-    
+      D.D_CODE =''subscribe_Analyze''
+      AND D.D_DESCRIPTION =''COS_DEGERI_DUSUK_OLAN_Primer''
+    ';            
+
+    execute immediate gv_dyn_task;
+
     gv_dyn_task := '
     CREATE TABLE '||gv_stg_owner||'.'||v_table_name||' 
     PARALLEL NOLOGGING COMPRESS
@@ -1338,6 +1367,8 @@ BEGIN
     v_table_name            varchar2(35) := 'COS_S_TAG003';
     ----------------------------------------------------------------------------
     v_src_table_01          varchar2(60) := 'TMP_RAWDATA0010_C';
+    v_src_table_02          varchar2(60) := 'D_DEFINITIONS';
+    v_src_table_03          varchar2(60) := 'D_GROUPS';
     V_SABONE_TYPE           CHAR(1)      :=      NULL; 
     V_SFLOW_MIN             VARCHAR2(10) :=      NULL;
     V_SCOS_MIN              VARCHAR2(10) :=      NULL;
@@ -1356,21 +1387,24 @@ BEGIN
        
 
     plib.drop_table(gv_stg_owner, v_table_name);
-     
+
+    gv_dyn_task := '     
       SELECT 
-        max(case when CODE= 'ABONE_TYPE' then PARAMETER_1 end) ABONE_TYPE,
-        max(case when CODE= 'FLOW_MIN' then PARAMETER_1 end) FLOW_MIN,
-        max(case when CODE= 'COS_MIN' then PARAMETER_1 end) COS_MIN,
-        max(case when CODE= 'COS_MAX' then PARAMETER_1 end) COS_MAX,
-        max(case when CODE= 'ANALYZE_MONTH_RANGE' then PARAMETER_1 end) ANALYZE_MONTH_RANGE,
-        max(case when CODE= 'STEP_CLOCK' then PARAMETER_1 end)-1 STEP_CLOCK,
-        max(case when CODE= 'SCORE' then PARAMETER_1 end) SCORE INTO V_SABONE_TYPE,V_SFLOW_MIN,V_SCOS_MIN,V_SCOS_MAX,V_SANALYZE_MONTH_RANGE,V_SSTEP_CLOCK,V_SSCORE
-      FROM 
-        DWH_EDW.D_DEFINITIONS D 
-        JOIN DWH_EDW.D_GROUPS G ON (D.RID = G.MASTER_ID) 
+        max(case when CODE= ''ABONE_TYPE'' then PARAMETER_1 end) ABONE_TYPE,
+        max(case when CODE= ''FLOW_MIN'' then PARAMETER_1 end) FLOW_MIN,
+        max(case when CODE= ''COS_MIN'' then PARAMETER_1 end) COS_MIN,
+        max(case when CODE= ''COS_MAX'' then PARAMETER_1 end) COS_MAX,
+        max(case when CODE= ''ANALYZE_MONTH_RANGE'' then PARAMETER_1 end) ANALYZE_MONTH_RANGE,
+        max(case when CODE= ''STEP_CLOCK'' then PARAMETER_1 end)-1 STEP_CLOCK,
+        max(case when CODE= ''SCORE'' then PARAMETER_1 end) SCORE INTO V_SABONE_TYPE,V_SFLOW_MIN,V_SCOS_MIN,V_SCOS_MAX,V_SANALYZE_MONTH_RANGE,V_SSTEP_CLOCK,V_SSCORE
+      FROM   '||gv_edw_owner||'.'||v_src_table_02||' D 
+      JOIN   '||gv_edw_owner||'.'||v_src_table_03||' G ON (D.RID = G.MASTER_ID) 
       WHERE
-         D.D_CODE ='subscribe_Analyze'
-        AND D.D_DESCRIPTION ='COS_DEGERI_DUSUK_OLAN_Sekonder';
+        D.D_CODE =''subscribe_Analyze''
+        AND D.D_DESCRIPTION =''COS_DEGERI_DUSUK_OLAN_Sekonder''
+    ';
+
+    execute immediate gv_dyn_task;
 
     gv_dyn_task := '
     CREATE TABLE '||gv_stg_owner||'.'||v_table_name||' 
@@ -1436,6 +1470,8 @@ PROCEDURE PRC_TMP_COS_TR0030
     v_table_name            varchar2(35) := 'COS_TR_TAG003';
     ----------------------------------------------------------------------------
     v_src_table_01          varchar2(60) := 'TMP_RAWDATA0010_C';
+    v_src_table_02          varchar2(60) := 'D_DEFINITIONS';
+    v_src_table_03          varchar2(60) := 'D_GROUPS';
     V_TABONE_TYPE           VARCHAR2(20) :=      NULL;
     V_TFLOW_MIN             VARCHAR2(10) :=      NULL;
     V_TCOS_MIN              VARCHAR2(10) :=      NULL;
@@ -1454,22 +1490,32 @@ BEGIN
        
 
     plib.drop_table(gv_stg_owner, v_table_name);
-            
+
+    gv_dyn_task := '            
     SELECT 
-      max(case when CODE= 'ABONE_TYPE' then PARAMETER_1 end) ABONE_TYPE,
-      max(case when CODE= 'FLOW_MIN' then PARAMETER_1 end) FLOW_MIN,
-      max(case when CODE= 'COS_MIN' then PARAMETER_1 end) COS_MIN,
-      max(case when CODE= 'COS_MAX' then PARAMETER_1 end) COS_MAX,
-      max(case when CODE= 'ANALYZE_MONTH_RANGE' then PARAMETER_1 end) ANALYZE_MONTH_RANGE,
-      max(case when CODE= 'STEP_CLOCK' then PARAMETER_1 end)-1 STEP_CLOCK,
-      max(case when CODE= 'SCORE' then PARAMETER_1 end) SCORE  INTO  V_TABONE_TYPE,V_TFLOW_MIN,V_TCOS_MIN,V_TCOS_MAX,V_TANALYZE_MONTH_RANGE,V_TSTEP_CLOCK,V_TSCORE
-    FROM 
-      DWH_EDW.D_DEFINITIONS D 
-      JOIN DWH_EDW.D_GROUPS G ON (D.RID = G.MASTER_ID) 
+      max(case when CODE= ''ABONE_TYPE'' then PARAMETER_1 end) ABONE_TYPE,
+      max(case when CODE= ''FLOW_MIN'' then PARAMETER_1 end) FLOW_MIN,
+      max(case when CODE= ''COS_MIN'' then PARAMETER_1 end) COS_MIN,
+      max(case when CODE= ''COS_MAX'' then PARAMETER_1 end) COS_MAX,
+      max(case when CODE= ''ANALYZE_MONTH_RANGE'' then PARAMETER_1 end) ANALYZE_MONTH_RANGE,
+      max(case when CODE= ''STEP_CLOCK'' then PARAMETER_1 end)-1 STEP_CLOCK,
+      max(case when CODE= ''SCORE'' then PARAMETER_1 end) SCORE  
+    INTO  
+      V_TABONE_TYPE,
+      V_TFLOW_MIN,
+      V_TCOS_MIN,
+      V_TCOS_MAX,
+      V_TANALYZE_MONTH_RANGE,
+      V_TSTEP_CLOCK,
+      V_TSCORE
+      FROM   '||gv_edw_owner||'.'||v_src_table_02||' D 
+      JOIN   '||gv_edw_owner||'.'||v_src_table_03||' G ON (D.RID = G.MASTER_ID) 
     WHERE 
-      D.D_CODE ='subscribe_Analyze'
-      AND D.D_DESCRIPTION ='COS_DEGERI_DUSUK_OLAN_Tar�msal_Sulama';   
-  
+      D.D_CODE =''subscribe_Analyze''
+      AND D.D_DESCRIPTION =''COS_DEGERI_DUSUK_OLAN_Tarımsal_Sulama''
+    ';
+
+    execute immediate gv_dyn_task;
     
     gv_dyn_task := '
     CREATE TABLE '||gv_stg_owner||'.'||v_table_name||' 
